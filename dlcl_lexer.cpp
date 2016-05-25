@@ -159,6 +159,7 @@ bool Lexer::lex(const char *str, unsigned len){
     
 //    char *string_cache[0x100];
 //    unsigned num_cached_strings = 0;
+    const char *const start = str;
     unsigned line = 0u;
 
     while(len){
