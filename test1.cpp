@@ -1,0 +1,60 @@
+#include "dlcl_lexer.hpp"
+#include "dlcl_parser.hpp"
+#include <cstdio>
+#include <cstring>
+
+using namespace DarkLight::CL;
+
+bool Print(char *err, Value &return_val, void *arg, Value *args, unsigned num_args){
+    fputs("dlcl> ", stdout);
+    for(unsigned i = 0; i < num_args; i++){
+        
+        if(args[i].m_type == Value::String)
+            fwrite(args[i].m_value.string, args[i].a.length, 1, stdout);
+        else if(args[i].m_type == Value::Integer)
+            printf("%i", args[i].m_value.integer);
+        else if(args[i].m_type == Value::Boolean)
+            fputs(args[i].m_value.boolean ? "true" : "false", stdout);
+        else
+            printf("%x ( %x )", args[i].m_value.function, args[i].a.length);
+    }
+    
+    putchar('\n');
+    
+    return_val.m_type = Value::Boolean;
+    return_val.m_value.boolean = true;
+    
+    return true;
+}
+int main(int argc, char *argv[]){
+	if(argc || argv){}
+	
+	printf("Size of Lexer is %i, size of Parser is %i\n", sizeof(Lexer), sizeof(Parser));
+	printf("Maximum number of variables: %i\n", s_max_parser_arena_size / sizeof(struct Variable));
+
+    Lexer lex;
+    lex.clear();
+    Parser parse;
+    parse.clear();
+    
+    const char *src = "bool b call Print: \"Hello, world!\". ";
+    lex.lex(src, strlen(src)-1);
+    
+    printf("Lexer error: %s\n", lex.getError());
+    if(*lex.getError() == '\0'){
+        char buffer[80];
+        for(const struct Token *i = lex.cbegin(); i!= lex.cend(); i++){
+            i->toString(buffer);
+            buffer[79] = 0;
+            printf("%i\t", i - lex.cbegin());
+            puts(buffer);
+        }
+        
+        parse.bindCallback("Print", Print, NULL);
+        const Value *const function = parse.findVariableConst("Print", 5);
+        parse.parse(lex);
+        printf("Parser error: %s\n", parse.getError());
+    }
+    
+	return 0;
+}
