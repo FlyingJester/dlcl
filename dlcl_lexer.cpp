@@ -140,10 +140,11 @@ static void skipWhitespace(const char *&str, unsigned &len, unsigned &line){
     while(len && is_whitespace(*str)){
         // Remove comments
         if(*str == '%'){
-            while(len && *str != '\n'){
+            do{
                 str++;
                 len--;
-            }
+            }while(len && *str != '\n');
+            continue;
         }
         
         if(*str == '\n')
@@ -349,7 +350,10 @@ bool Lexer::lex(const char *str, unsigned len){
                 addToken(oper);
             }
             else{
-                sprintf(m_data, "Invalid character at line %i: '%c'", line, *str);
+                if(str - start > 2 && len > 2)
+                    sprintf(m_data, "Invalid character at line %i: (%i) %c%c[%c]%c%c'", line, *str, str[-2], str[-1], str[0], str[1], str[2]);
+                else
+                    sprintf(m_data, "Invalid character at line %i: (%i) %c'", line, *str, *str);
                 return false;
             }
         }
