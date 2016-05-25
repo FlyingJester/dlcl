@@ -11,3 +11,6 @@ but will OOM on long running scripts that perform many string operations. Script
 perform integer and logic operations can be arbitrarily long running, however.
 
 DLCL is licensed under the MPL v2.
+
+The tests require UnitTest++, which uses an ISC/BSD style license. For convenience, a copy
+of UnitTest++ (with readme and license text) is included in the unittest-cpp directory)
