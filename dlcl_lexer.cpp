@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/ */
 
 #include "dlcl_lexer.hpp"
-#include "dlcl_utils.hpp"
+#include "dlcl_utils.h"
 #include <cstring>
 #include <climits>
 #include <cstdio>
@@ -38,7 +38,7 @@ void Token::toString(char *to) const{
             return;
         case Number:
             strcpy(to, "Number: ");
-            Util::NumberToString(to, m_value.number);
+            DLCL_Utils_NumberToString(to, m_value.number);
             return;
 #define CASE_(X_) case X_: strcpy(to, #X_); return
         CASE_(TrueLiteral);

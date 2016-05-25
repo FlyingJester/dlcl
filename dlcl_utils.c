@@ -2,13 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/ */
 
-#include "dlcl_utils.hpp"
+#include "dlcl_utils.h"
 
-namespace DarkLight {
-namespace CL{
-namespace Util{
-
-void NumberToString(char *to, int n, int len, bool null_term){
+void DLCL_Utils_NumberToString(char *to, int n, int len, bool null_term){
     if(len < 0){
         len = -1;
         do{
@@ -32,7 +28,3 @@ void NumberToString(char *to, int n, int len, bool null_term){
     if(i < len && null_term)
         to[i] = '\0';
 }
-
-} // namespace Util
-} // namespace CL
-} // namespace DarkLight

@@ -1,6 +1,6 @@
 import os
 
-dlcl = StaticLibrary("dlcl", ["dlcl_parser.cpp", "dlcl_lexer.cpp", "dlcl_std.cpp", "dlcl_utils.cpp"],
+dlcl = StaticLibrary("dlcl", ["dlcl_parser.cpp", "dlcl_lexer.cpp", "dlcl_std.cpp", "dlcl_utils.c"],
     CCFLAGS = " -g -O2 -Wall -Wextra ")
 dlcl_test1 = Program(["test1.cpp"], LIBS = [dlcl], CCFLAGS = " -g -O2 ")
 
