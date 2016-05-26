@@ -172,15 +172,7 @@ bool Lexer::lex(const char *str, unsigned len){
         if(is_whitespace(*str)){
             skipWhitespace(str, len, line);
         }
-        else if(is_digit(*str) || *str == '-' || *str == '+'){
-            const bool negate = *str=='-';
-            
-            if(*str == '+' || *str == '-'){
-                str++;
-                len--;
-                if(!len)
-                    continue;
-            }
+        else if(is_digit(*str)){
             
             const unsigned max = UINT_MAX / 11u;
             unsigned u = 0;
@@ -198,7 +190,7 @@ bool Lexer::lex(const char *str, unsigned len){
                 str++;
             }while(--len && is_digit(*str));
             const int n = u;
-            addToken(Token::Number, static_cast<float>(negate ? -n : n));
+            addToken(Token::Number, static_cast<float>(n));
         }
         else if(is_ident(*str)){
             char id[80];
