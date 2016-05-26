@@ -4,10 +4,12 @@
 
 #include "dlcl_lexer.hpp"
 #include "dlcl_parser.hpp"
+#include "dlcl_std.hpp"
 #include "UnitTestPP.h"
 #include "TestReporterStdout.h"
 #include <cstring>
 #include <cstdio>
+#include <string>
 
 using namespace DarkLight::CL;
 
@@ -62,15 +64,33 @@ TEST_FIXTURE(LexerTest, CommentTest){
 }
 
 TEST_FIXTURE(LexerTest, CallTest){
-    
+    m_src = "call somefunc.";
+    REQUIRE CHECK(run());
+    CHECK_EQUAL(2, m_lex.size());
+    REQUIRE CHECK(m_lex.size() >= 2);
+    CHECK_EQUAL(Token::CallIdent, m_lex.cbegin()[0].m_type);
+    CHECK_EQUAL("somefunc", std::string(m_lex.cbegin()[0].m_value.string, m_lex.cbegin()[0].m_length));
+    CHECK_EQUAL(Token::Dot, m_lex.cbegin()[1].m_type);
 }
 
 TEST_FIXTURE(LexerTest, SetTest){
-    
+    m_src = "set somevar 10";
+    REQUIRE CHECK(run());
+    CHECK_EQUAL(2, m_lex.size());
+    REQUIRE CHECK(m_lex.size() >= 2);
+    CHECK_EQUAL(Token::SetIdent, m_lex.cbegin()[0].m_type);
+    CHECK_EQUAL("somevar", std::string(m_lex.cbegin()[0].m_value.string, m_lex.cbegin()[0].m_length));
+    CHECK_EQUAL(Token::Number, m_lex.cbegin()[1].m_type);
+    CHECK_EQUAL(10, m_lex.cbegin()[1].m_value.number);
 }
 
 TEST_FIXTURE(LexerTest, GetTest){
-    
+    m_src = "get somevar";
+    REQUIRE CHECK(run());
+    CHECK_EQUAL(1, m_lex.size());
+    REQUIRE CHECK(!m_lex.empty());
+    CHECK_EQUAL(Token::GetIdent, m_lex.cbegin()[0].m_type);
+    CHECK_EQUAL("somevar", std::string(m_lex.cbegin()[0].m_value.string, m_lex.cbegin()[0].m_length));
 }
 
 TEST_FIXTURE(LexerTest, MulOpTest){
