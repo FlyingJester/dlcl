@@ -94,15 +94,55 @@ TEST_FIXTURE(LexerTest, GetTest){
 }
 
 TEST_FIXTURE(LexerTest, MulOpTest){
+    m_src = "int i 10 * 2 / 299 * 1";
+    REQUIRE CHECK(run());
+    CHECK_EQUAL(8, m_lex.size());
+    REQUIRE CHECK(m_lex.size() >= 8);
     
+    const Token *t = m_lex.cbegin();
+    CHECK_EQUAL(Token::IntIdent, t->m_type);
+    CHECK_EQUAL("i", std::string(t->m_value.string, t->m_length));
+    t++;
+    CHECK_EQUAL(Token::Number, t->m_type);
+    CHECK_EQUAL(10, t->m_value.number);
+    t++;
+    CHECK_EQUAL(Token::Oper, t->m_type);
+    CHECK_EQUAL(Multiply, t->m_value.oper);
+    t++;
+    CHECK_EQUAL(Token::Number, t->m_type);
+    CHECK_EQUAL(2, t->m_value.number);
+    t++;
+    CHECK_EQUAL(Token::Oper, t->m_type);
+    CHECK_EQUAL(Divide, t->m_value.oper);
+    t++;
+    CHECK_EQUAL(Token::Number, t->m_type);
+    CHECK_EQUAL(299, t->m_value.number);
+    t++;
+    CHECK_EQUAL(Token::Oper, t->m_type);
+    CHECK_EQUAL(Multiply, t->m_value.oper);
+    t++;
+    CHECK_EQUAL(Token::Number, t->m_type);
+    CHECK_EQUAL(1, t->m_value.number);
 }
 
 TEST_FIXTURE(LexerTest, AddOpTest){
+    m_src = "string \nstr \n\"abc\" \n+\n \"xyz\"";
+    REQUIRE CHECK(run());
+    CHECK_EQUAL(4, m_lex.size());
+    REQUIRE CHECK(m_lex.size() >= 4);
     
-}
-
-TEST_FIXTURE(LexerTest, DeclarationTest){
-    
+    const Token *t = m_lex.cbegin();
+    CHECK_EQUAL(Token::StringIdent, t->m_type);
+    CHECK_EQUAL("str", std::string(t->m_value.string, t->m_length));
+    t++;
+    CHECK_EQUAL(Token::String, t->m_type);
+    CHECK_EQUAL("abc", std::string(t->m_value.string, t->m_length));
+    t++;
+    CHECK_EQUAL(Token::Oper, t->m_type);
+    CHECK_EQUAL(Plus, t->m_value.oper);
+    t++;
+    CHECK_EQUAL(Token::String, t->m_type);
+    CHECK_EQUAL("xyz", std::string(t->m_value.string, t->m_length));
 }
 
 int main(int argc, char *argv[]){
