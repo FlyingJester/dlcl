@@ -40,6 +40,8 @@ struct Value {
     } a;
     static Type typeFromToken(const Token *t);
     const char *readableTypeName() const;
+    
+    bool equal(const Value &other) const;
 };
 
 struct Variable {
@@ -80,7 +82,7 @@ class Parser{
     Variable *validateVariableDeclaration(const Token &i);
     
     bool doCall(const char *name, unsigned name_len,
-        const Token *const start, const Token *&i, const Token *const end);
+        const Token *const start, const Token *&i, const Token *const end, int /*Operator*/ ender);
     
 public:
     

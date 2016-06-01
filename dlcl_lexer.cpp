@@ -314,6 +314,9 @@ bool Lexer::lex(const char *str, unsigned len){
             len--;\
         }
         
+        SINGLE_CHAR_TOKEN_OPER(Or, '|')
+        SINGLE_CHAR_TOKEN_OPER(And, '&')
+        SINGLE_CHAR_TOKEN_OPER(Xor, '^')
         SINGLE_CHAR_TOKEN_OPER(GreaterThan, '>')
         SINGLE_CHAR_TOKEN_OPER(LessThan, '<')
         SINGLE_CHAR_TOKEN_OPER(Equal, '=')

@@ -33,6 +33,30 @@ const char *Value::readableTypeName() const{
 }
 
 //=============================================================================
+bool Value::equal(const Value &other) const{
+    
+    if(other.m_type != m_type)
+        return false;
+
+    switch(m_type){
+        case Value::String:
+            return a.length == other.a.length &&
+                memcmp(other.m_value.string, m_value.string, a.length) == 0;
+        case Value::Boolean:
+            return m_value.boolean == other.m_value.boolean;
+        case Value::Integer:
+            return m_value.integer == other.m_value.integer;
+        case Value::Function:
+            return m_value.function == other.m_value.function;
+        case Value::NativeFunction:
+            return m_value.native_function == other.m_value.native_function &&
+                a.arg == other.a.arg;
+        default:
+            return false; // Invalid or uncomparable type
+    }
+}
+
+//=============================================================================
 int Parser::findVariableIndex(const char *name, unsigned len) const {
     if(!len)
         len = strnlen(name, 80);
@@ -129,7 +153,8 @@ Variable *Parser::validateVariableDeclaration(const Token &i){
 
 //=============================================================================
 bool Parser::doCall(const char *func_name, unsigned func_name_len,
-    const Token *const start, const Token *&i, const Token *const end){
+    const Token *const start, const Token *&i, const Token *const end, int i_ender){
+    const Token::Type ender = static_cast<Token::Type>(i_ender);
     const Value *const function = findVariableConst(func_name, func_name_len);
     if(!function){
         strcpy(m_error, "Call to undeclared function: ");
@@ -143,7 +168,7 @@ bool Parser::doCall(const char *func_name, unsigned func_name_len,
         // TODO: Agument parsing, anyone?
 #define DLCL_MAX_ARGS 16
         unsigned arg_num = 0;
-        while(i != end && i->m_type != Token::Dot){
+        while(i != end && i->m_type != ender){
             if(!parseExpression(start, i, end))
                 return false;
             if(!canPopValue(m_error, m_stack, m_sp))
@@ -224,7 +249,7 @@ bool Parser::doCall(const char *func_name, unsigned func_name_len,
         if(i != end && i->m_type == Token::Colon)
             i++;
         
-        while(i != end && i->m_type != Token::Dot){
+        while(i != end && i->m_type != ender){
             if(!parseExpression(start, i, end))
                 return false;
             if(!canPopValue(m_error, m_stack, m_sp))
@@ -235,7 +260,7 @@ bool Parser::doCall(const char *func_name, unsigned func_name_len,
                 return false;
             }
         }
-        if(i != end && i->m_type == Token::Dot)
+        if(i != end && i->m_type == ender)
             i++;
 #undef DLCL_MAX_ARGS
         if(!function->m_value.native_function(
@@ -340,17 +365,18 @@ bool Parser::parseFactor(const Token *const start, const Token *&i, const Token 
         {
             const char *func_name = i->m_value.ident;
             const unsigned func_name_len = i->m_length;
-            return doCall(func_name, func_name_len, start, ++i, end);
+            return doCall(func_name, func_name_len, start, ++i, end, Token::Dot);
         }
         case Token::Return:
             return parseExpression(start, i, end);
         case Token::OpenParen:
-            if(!parseExpression(start, i, end))
+            if(!parseExpression(start, ++i, end))
                 return false;
             if(i->m_type != Token::CloseParen){
                 strcpy(m_error, "Expected close paren at the end of parenthetical statement");
                 return false;
             }
+            i++;
             return true;
         case Token::CloseParen:
             strcpy(m_error, "Expected factor at close paren");
@@ -594,13 +620,28 @@ bool Parser::parseStatement(const Token *const start, const Token *&i, const Tok
         // Assign to the new variable value
         that.m_value = value.m_value;
         that.a = value.a;
-
+        
         return true;
     }
     else if(i->m_type == Token::CallIdent){
         const char *const func_name = i->m_value.ident;
         const unsigned func_name_len = i->m_length;
-        if(!doCall(func_name, func_name_len, start, ++i, end))
+        if(!doCall(func_name, func_name_len, start, ++i, end, Token::Dot))
+            return false;
+        else{
+            m_sp--;
+            return true;
+        }
+    }
+    else if(i->m_type == Token::BeginArgs){
+        i++;
+        if(i == end || i->m_type != Token::Ident){
+            strcpy(m_error, "Expected function name in smalltalk-style call");
+            return false;
+        }
+        const char *const func_name = i->m_value.ident;
+        const unsigned func_name_len = i->m_length;
+        if(!doCall(func_name, func_name_len, start, ++i, end, Token::EndArgs))
             return false;
         else{
             m_sp--;
@@ -639,7 +680,7 @@ bool Parser::parseStatement(const Token *const start, const Token *&i, const Tok
 }
 
 Parser::Parser(){
-    
+    clear();
 }
 
 //=============================================================================
