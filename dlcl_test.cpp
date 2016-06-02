@@ -327,6 +327,20 @@ TEST_FIXTURE(ParserTest, NumberArithmeticTest){
     CHECK(result.m_success);
 }
 
+TEST_FIXTURE(ParserTest, DeclarationTest){
+    const char *const testname = "TestFunc";
+    Result<1> result;
+    result.m_success = false;
+
+    result.m_values[0].m_type = Value::Integer;
+    result.m_values[0].m_value.integer = 216;
+    
+    m_parse.bindCallback(testname, TestArgCallback<1>, &result);
+    CHECK(run("int X 216\ncall TestFunc: get X."));
+    CHECK(result.m_success);
+    
+}
+
 } // SUITE(Parser)
 
 int main(int argc, char *argv[]){

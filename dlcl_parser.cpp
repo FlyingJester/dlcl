@@ -5,6 +5,7 @@
 #include "dlcl_parser.hpp"
 #include "dlcl_lexer.hpp"
 #include <cstring>
+#include <cassert>
 
 namespace DarkLight {
 namespace CL{
@@ -147,7 +148,9 @@ Variable *Parser::validateVariableDeclaration(const Token &i){
     // Grab the type before we move off of the current token
     strncpy(m_variables[m_num_variables].m_name, i.m_value.string, i.m_length);
     m_variables[m_num_variables].m_value.m_type = Value::typeFromToken(&i);
+    
     m_num_variables++;
+    
     return m_variables + m_num_variables - 1;
 }
 

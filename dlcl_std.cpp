@@ -5,6 +5,10 @@
 #include "dlcl_std.hpp"
 #include <cstring>
 
+#ifndef DLCL_NO_STDIO
+#include <cstdio>
+#endif
+
 namespace DarkLight {
 namespace CL{
 namespace Std{
@@ -136,6 +140,29 @@ bool Empty(char *err, Value &return_val, void *arg, Value *args, unsigned num_ar
     
     return_val.m_type = Value::Boolean;
     return_val.m_value.boolean = args->a.length == 0;
+    return true;
+}
+
+bool Print(char *err, Value &return_val, void *arg, Value *args, unsigned num_args){
+    if(err || arg || args || num_args){}
+#ifndef DLCL_NO_STDIO
+    for(unsigned i = 0; i < num_args; i++){
+        
+        if(args[i].m_type == Value::String)
+            fwrite(args[i].m_value.string, args[i].a.length, 1, stdout);
+        else if(args[i].m_type == Value::Integer)
+            printf("%i", args[i].m_value.integer);
+        else if(args[i].m_type == Value::Boolean)
+            fputs(args[i].m_value.boolean ? "true" : "false", stdout);
+        else
+            printf("%x ( %x )", args[i].m_value.function, args[i].a.length);
+    }
+    
+#endif
+    
+    return_val.m_type = Value::Boolean;
+    return_val.m_value.boolean = true;
+
     return true;
 }
 

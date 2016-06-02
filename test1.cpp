@@ -6,6 +6,7 @@
 #include "dlcl_parser.hpp"
 #include <cstdio>
 #include <cstring>
+#include <string>
 
 using namespace DarkLight::CL;
 
@@ -41,8 +42,9 @@ int main(int argc, char *argv[]){
     Parser parse;
     parse.clear();
     
-    const char *src = "bool b call Print: \"Hello, world!\". ";
-    lex.lex(src, strlen(src)-1);
+    std::string src = "call Print: \"Hello, world!\". \n";
+    
+    lex.lex(src.c_str(), src.length() - 1);
     
     printf("Lexer error: %s\n", lex.getError());
     if(*lex.getError() == '\0'){

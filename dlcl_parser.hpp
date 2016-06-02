@@ -15,6 +15,7 @@ struct Value;
 
 typedef bool (*native_callback)(char *err, Value &return_val, void *arg, Value *args, unsigned num_args);
 
+// Value structure
 struct Value {
     enum Type {
         Integer,
@@ -41,6 +42,8 @@ struct Value {
     static Type typeFromToken(const Token *t);
     const char *readableTypeName() const;
     
+    // Determines equality. This is different than a bytewise equality in that strings
+    // will be compared
     bool equal(const Value &other) const;
 };
 
@@ -49,6 +52,7 @@ struct Variable {
     Value m_value;
 };
 
+// Constraints for memory usage
 static const unsigned s_max_parser_arena_size = 0x80 * 0x400;
 static const unsigned s_parser_error_len = 0x100;
 static const unsigned s_max_parser_variables = 
@@ -56,28 +60,46 @@ static const unsigned s_max_parser_variables =
 
 class Parser{
     
+    // VM Stack. Used to pass results to/from expressions and expression parts
     unsigned m_sp;
     struct Value m_stack[8];
+    // Argument stack. Not used currently
     struct Value m_arg_stack[16];
 
+    // Variable arena
     unsigned m_num_variables;
     struct Variable m_variables[s_max_parser_variables];
 
+    // Callstack. Not used currently
     unsigned m_callp;
     unsigned m_callstack[8];
     
+    // Error message. NULL terminated
     char m_error[s_parser_error_len];
+    
+    // String data arena
     char m_string_data[s_max_parser_arena_size];
     unsigned m_string_length;
     
     int findVariableIndex(const char *name, unsigned len = 0) const;
     
+    // <statement> ::= <set_statement> | <call_statement> | <smalltalk_call>
     bool parseStatement(const Token *const start, const Token *&i, const Token *const end);
+    // <bin_op> ::= [<not>] (<greater_than> | <less_than> | <equal> | <and> | <or> | <xor>)
+    // <expression> ::= <bterm> [<bin_op> <bterm>]*
     bool parseExpression(const Token *const start, const Token *&i, const Token *const end);
+    // <add_op> ::= '+' | '-'
+    // <bterm> ::= <term> [<add_op> <term>]*
     bool parseBTerm(const Token *const start, const Token *&i, const Token *const end);
+    // <mul_op> ::= '*' | '/'
+    // <term> ::= <factor> [<mul_op> <factor>]*
     bool parseTerm(const Token *const start, const Token *&i, const Token *const end);
+    // <factor> ::= <literal> | <call_statement> | <smalltalk_call> | <get_statement>
     bool parseFactor(const Token *const start, const Token *&i, const Token *const end);
+    // <set_statement> ::= 'set' <identifier> <expression>
     bool parseAssignment(const Token *const start, const Token *&i, const Token *const end);
+    // <smalltalk_call> ::= '[' <identifier> [':'] [<expression>]* ']'
+    // <call_statement> ::= 'call' <identifier> [':'] [<expression>]* '.'
     bool parseCall(const Token *const start, const Token *&i, const Token *const end);
     Variable *validateVariableDeclaration(const Token &i);
     
@@ -86,6 +108,7 @@ class Parser{
     
 public:
     
+    // Binds a native function to a variable in script
     void bindCallback(const char *name, native_callback, void *arg);
     
     inline Value *findVariable(const char *name, unsigned len = 0) {

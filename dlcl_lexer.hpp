@@ -8,6 +8,8 @@
 namespace DarkLight {
 namespace CL{
 
+// Operators. Different from terminal token types in that eevry operator
+// requires an lvalue and an rvalue
 enum Operator {
     Plus,
     Minus,
@@ -24,6 +26,7 @@ enum Operator {
     Xor
 };
 
+// Token definition. Note that comments are considered whitespace and not given a token
 struct Token {
     enum Type { 
         Ident,
@@ -93,6 +96,7 @@ struct Token {
     unsigned m_length;
 };
 
+// Memory constraints
 static const unsigned s_max_lexer_arena_size = 0x80 * 0x400;
 static const unsigned s_max_lexer_string_size = s_max_lexer_arena_size;
 static const unsigned s_lexer_error_len = 0x100;

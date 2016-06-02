@@ -13,3 +13,41 @@ perform integer and logic operations can be arbitrarily long running, however.
 DLCL is licensed under the MPL v2.
 
 Building tests requires UnitTest++. You can get this at: https://github.com/pjohnmeyer/unittest-cpp
+
+Examples
+--------
+
+```
+% Hello, world!
+call Print: "Hello, world!\n".
+```
+
+```
+% Hello world using alternative call syntax
+[Print "Hello, world!\n"]
+```
+
+```
+% Nintety-nine bottles of beer on the wall
+int i 99
+loop i > 0:
+    [Print i " bottles of beer on the wall, " i " bottles of beer.\n"]
+    [Print "Take one down, pass it around\n"]
+    set i get i - 1
+    [Print i " bottles of beer on the wall."]
+.
+```
+
+```
+% Imperative Fibonacci
+int n 12 % Number to take
+int i 0 % Iterator
+int x 1 % Current Fibonacci number
+int y 1 % Previous Fibonacci number
+loop i < n:
+    int z get x
+    set x get y + get z
+    set y get z
+    set i get i + 1
+.
+```

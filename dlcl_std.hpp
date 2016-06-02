@@ -17,6 +17,7 @@ bool Any(char *err, Value &return_val, void *arg, Value *args, unsigned num_args
 bool All(char *err, Value &return_val, void *arg, Value *args, unsigned num_args);
 bool Len(char *err, Value &return_val, void *arg, Value *args, unsigned num_args);
 bool Empty(char *err, Value &return_val, void *arg, Value *args, unsigned num_args);
+bool Print(char *err, Value &return_val, void *arg, Value *args, unsigned num_args);
 
 } // namespace Std
 } // namespace CL
