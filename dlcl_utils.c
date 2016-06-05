@@ -5,16 +5,17 @@
 #include "dlcl_utils.h"
 
 void DLCL_Utils_NumberToString(char *to, int n, int len, bool null_term){
+    int x;
+    int i = 0;
+    char buffer[80];
+
     if(len < 0){
         len = -1;
         do{
             len++;
         }while(to[len]);
     }
-    
-    char buffer[80];
-    unsigned i = 0;
-    
+        
     while(n){
         buffer[sizeof(buffer) - (++i)] = (n % 10) + '0';
         n /= 10;
@@ -22,7 +23,7 @@ void DLCL_Utils_NumberToString(char *to, int n, int len, bool null_term){
     
     char *const from = buffer + sizeof(buffer) - i;
     
-    for(int x = 0; x < i && x < len; x++){
+    for(x = 0; x < i && x < len; x++){
         to[x] = from[x];
     }
     if(i < len && null_term)
