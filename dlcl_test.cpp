@@ -144,6 +144,33 @@ TEST_FIXTURE(LexerTest, AddOpTest){
     CHECK_EQUAL("xyz", std::string(t->m_value.string, t->m_length));
 }
 
+TEST_FIXTURE(LexerTest, ConditionalTest){
+
+    CHECK(run("if true:\n call xyz: 216.\n."));
+    
+    CHECK_EQUAL(8, m_lex.size());
+    REQUIRE CHECK(m_lex.size() >= 8);
+    
+    const Token *t = m_lex.cbegin();
+    CHECK_EQUAL(Token::If, t->m_type);
+    t++;
+    CHECK_EQUAL(Token::TrueLiteral, t->m_type);
+    t++;
+    CHECK_EQUAL(Token::Colon, t->m_type);
+    t++;
+    CHECK_EQUAL(Token::CallIdent, t->m_type);
+    CHECK_EQUAL("xyz", std::string(t->m_value.string, t->m_length));
+    t++;
+    CHECK_EQUAL(Token::Colon, t->m_type);
+    t++;
+    CHECK_EQUAL(Token::Number, t->m_type);
+    CHECK_EQUAL(216.0f, t->m_value.number);
+    t++;
+    CHECK_EQUAL(Token::Dot, t->m_type);
+    t++;
+    CHECK_EQUAL(Token::Dot, t->m_type);
+}
+
 } // SUITE(Lexer)
 
 class ParserTest {
@@ -336,9 +363,35 @@ TEST_FIXTURE(ParserTest, DeclarationTest){
     result.m_values[0].m_value.integer = 216;
     
     m_parse.bindCallback(testname, TestArgCallback<1>, &result);
-    CHECK(run("int X 216\ncall TestFunc: get X."));
+    CHECK(run("int X 216\n call TestFunc: get X."));
     CHECK(result.m_success);
     
+}
+
+TEST_FIXTURE(ParserTest, ConditionalTrueTest){
+    const char *const testname = "TestFunc";
+    Result<1> result;
+    result.m_success = false;
+
+    result.m_values[0].m_type = Value::Integer;
+    result.m_values[0].m_value.integer = 216;
+    
+    m_parse.bindCallback(testname, TestArgCallback<1>, &result);
+    CHECK(run("if true:\n call TestFunc: 216.\n."));
+    CHECK(result.m_success);
+}
+
+TEST_FIXTURE(ParserTest, ConditionalFalseTest){
+    const char *const testname = "TestFunc";
+    Result<1> result;
+    result.m_success = false;
+
+    result.m_values[0].m_type = Value::Integer;
+    result.m_values[0].m_value.integer = 216;
+    
+    m_parse.bindCallback(testname, TestArgCallback<1>, &result);
+    CHECK(run("call TestFunc: 216.\n if false:\n call TestFunc: 23. \n."));
+    CHECK(result.m_success);
 }
 
 } // SUITE(Parser)

@@ -40,6 +40,10 @@ struct Token {
         TrueLiteral, FalseLiteral,
         FromIdent, // Holds an ident
         CallIdent, // Holds an ident
+        If,
+        Loop,
+        Next,
+        End,
         Return,
         OpenParen,
         CloseParen,

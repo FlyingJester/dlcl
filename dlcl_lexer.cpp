@@ -43,6 +43,10 @@ void Token::toString(char *to) const{
 #define CASE_(X_) case X_: strcpy(to, #X_); return
         CASE_(TrueLiteral);
         CASE_(FalseLiteral);
+        CASE_(If);
+        CASE_(Loop);
+        CASE_(Next);
+        CASE_(End);
         CASE_(Return);
         CASE_(OpenParen);
         CASE_(CloseParen);
@@ -200,6 +204,7 @@ bool Lexer::lex(const char *str, unsigned len){
             bool another_ident = false, swallow_colon = false;
             Token::Type which = (Token::Type)99;
             
+            // This organization is for optimization of sctring comparsions
             if(str_len == 3 && *id == 'g' && memcmp(id, "get", 3)==0){
                 which = Token::GetIdent;
                 another_ident = true;
@@ -219,9 +224,15 @@ bool Lexer::lex(const char *str, unsigned len){
                 which = Token::CallIdent;
                 another_ident = true;
             }
-            else if(str_len == 3 && *id == 'i' && memcmp(id, "int", 3) == 0){
-                which = Token::IntIdent;
-                swallow_colon = another_ident = true;
+            else if(*id == 'i'){
+                if(str_len == 3 && memcmp(id, "int", 3) == 0){
+                    which = Token::IntIdent;
+                    swallow_colon = another_ident = true;
+                }
+                else if(str_len == 2 && id[1] == 'f'){
+                    addTokenMod(Token::If);
+                    continue;
+                }
             }
             else if(str_len == 4 && *id == 'b' && memcmp(id, "bool", 4) == 0){
                 which = Token::BoolIdent;
@@ -234,6 +245,18 @@ bool Lexer::lex(const char *str, unsigned len){
             }
             else if(str_len == 5 && *id == 'f' && memcmp(id, "false", 5) == 0){
                 addTokenMod(Token::FalseLiteral);
+                continue;
+            }
+            else if(str_len == 4 && *id == 'l' && memcmp(id, "loop", 4) == 0){
+                addTokenMod(Token::Loop);
+                continue;
+            }
+            else if(str_len == 4 && *id == 'n' && memcmp(id, "next", 4) == 0){
+                addTokenMod(Token::Next);
+                continue;
+            }
+            else if(str_len == 3 && *id == 'e' && memcmp(id, "end", 3) == 0){
+                addTokenMod(Token::End);
                 continue;
             }
             

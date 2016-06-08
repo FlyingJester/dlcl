@@ -318,6 +318,14 @@ bool Parser::parseFactor(const Token *const start, const Token *&i, const Token 
             return true;
         case Token::Oper:
             if(!t) t = "Operator";
+        case Token::If:
+            if(!t) t = "if";
+        case Token::Loop:
+            if(!t) t = "loop";
+        case Token::End:
+            if(!t) t = "end";
+        case Token::Next:
+            if(!t) t = "next";
         case Token::Colon:
             if(!t) t = "Colon (:)";
         case Token::Dot:
@@ -361,6 +369,9 @@ bool Parser::parseFactor(const Token *const start, const Token *&i, const Token 
                 return false;
             }
             m_stack[m_sp++] = *value;
+            
+            i++;
+            
             return true;
             
         }
@@ -557,7 +568,26 @@ bool Parser::parseExpression(const Token *const start, const Token *&i, const To
 #define NEGATED_CASE(WHAT_)\
         case Not ## WHAT_: negate = true; case WHAT_
         
+#define BOOL_CHECK(WHAT_X_)\
+            if(lvalue.m_type != Value::Boolean){\
+                strcpy(m_error, "Boolean values required for '" #WHAT_X_ "' operator");\
+                return false;\
+            } do {} while(0)
+        
+#define BOOL_CASE(WHAT_, OPER_)\
+        case WHAT_:\
+            BOOL_CHECK(WHAT_);\
+            dest = lvalue.m_value.boolean OPER_ rvalue.m_value.boolean;\
+            break
+        
         switch(op){
+            BOOL_CASE(And, &&);
+            BOOL_CASE(Or, ||);
+            case Xor:
+                BOOL_CHECK(Xor);
+                dest = (lvalue.m_value.boolean || rvalue.m_value.boolean) && 
+                    !(lvalue.m_value.boolean && rvalue.m_value.boolean);
+                break;
             NEGATED_CASE(LessThan):
                 if(lvalue.m_type != Value::Integer)
                     return requireInteger(m_error,
@@ -571,11 +601,11 @@ bool Parser::parseExpression(const Token *const start, const Token *&i, const To
                 dest = lvalue.m_value.integer > rvalue.m_value.integer;
                 break;
             NEGATED_CASE(Equal):
-                if(lvalue.m_type != Value::Integer)
+                if(lvalue.m_type == Value::Integer)
                     dest = lvalue.m_value.integer == rvalue.m_value.integer;
-                else if(lvalue.m_type != Value::Boolean)
+                else if(lvalue.m_type == Value::Boolean)
                     dest = lvalue.m_value.boolean == rvalue.m_value.boolean;
-                else if(lvalue.m_type != Value::String)
+                else if(lvalue.m_type == Value::String)
                     dest = lvalue.a.length == rvalue.a.length &&
                         memcmp(lvalue.m_value.string, rvalue.m_value.string, rvalue.a.length) == 0;
                 break;
@@ -586,12 +616,91 @@ bool Parser::parseExpression(const Token *const start, const Token *&i, const To
         
 #undef NEGATED_CASE
         
+#undef BOOL_CHECK
+        
+#undef BOOL_CASE
+        
         if(negate)
             dest = !dest;
         m_sp++;
     }
 
     return true;
+}
+
+//=============================================================================
+bool Parser::parseControl(const Token *const start, const Token *&i,
+    const Token *const end, bool loop){
+
+    const Token *const begin = i;
+
+conditional_start:
+    if(!parseExpression(start, i, end))
+        return false;
+    
+    if(i == end || i->m_type != Token::Colon){
+        strcpy(m_error, "Expected colon after conditional");
+        return false;
+    }
+    i++;
+
+    if(!canPopValue(m_error, m_stack, m_sp))
+        return false;
+    
+    const Value &do_work = m_stack[--m_sp];
+    
+    if(do_work.m_type != Value::Boolean){
+        strcpy(m_error, "Expected boolean in conditional");
+        return false;
+    }
+    else if(do_work.m_value.boolean){
+        while(i != end && i->m_type != Token::Dot)
+            if(!parseStatement(start, i, end))
+                return false;
+        
+        if(i != end && i->m_type == Token::Dot)
+            i++;
+        if(loop){
+            i = begin;
+            goto conditional_start;
+        }
+        return true;
+    }
+    else{
+        if(i == end){
+            strcpy(m_error, "Missing body after conditional.");
+            return false;
+        }
+        
+        unsigned level = 1;
+        do{
+            
+            if(i->m_type == Token::CallIdent ||
+                i->m_type == Token::SetIdent ||
+                i->isDeclaration()){
+                do{
+                    i++;
+                }while( i != end && i->m_type != Token::Dot );
+                // We _may_ be sitting on the end here, so we need to back off
+                // so the later check won't go past the end
+                if(i == end)
+                    i--;
+            }
+            else if(i->m_type == Token::Dot){
+                level--;
+            }
+            else if(i->m_type == Token::Colon){
+                level++;
+            }
+            
+            if(++i == end && level){
+                strcpy(m_error, "Expected end of scope after conditional.");
+                return false;
+            }
+        }while(level);
+        
+        return true;
+    }
 }
 
 //=============================================================================
@@ -602,6 +711,10 @@ bool Parser::parseStatement(const Token *const start, const Token *&i, const Tok
         if(!variable)
             return false;
         
+        // Copy name
+        memcpy(variable->m_name, i->m_value.ident, i->m_length);
+        variable->m_name[i->m_length] = '\0';
+
         Value &that = variable->m_value;
         
         if(!parseExpression(start, ++i, end))
@@ -615,10 +728,6 @@ bool Parser::parseStatement(const Token *const start, const Token *&i, const Tok
         // Typecheck
         if(!handleTypeComparison(m_error, value, that))
             return false;
-
-        // Copy name
-        memcpy(variable->m_name, i->m_value.ident, i->m_length);
-        variable->m_name[i->m_length] = '\0';
         
         // Assign to the new variable value
         that.m_value = value.m_value;
@@ -667,6 +776,12 @@ bool Parser::parseStatement(const Token *const start, const Token *&i, const Tok
         that->m_value = value.m_value;
         that->a = value.a;
         return true;
+    }
+    else if(i->m_type == Token::Loop){
+        return parseLoop(start, ++i, end);
+    }
+    else if(i->m_type == Token::If){
+        return parseIf(start, ++i, end);
     }
     else{
         strcpy(m_error, "Invalid token ");

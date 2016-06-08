@@ -74,6 +74,9 @@ class Parser{
     unsigned m_callp;
     unsigned m_callstack[8];
     
+    unsigned m_scope_stack_len;
+    unsigned m_scopestack[8];
+    
     // Error message. NULL terminated
     char m_error[s_parser_error_len];
     
@@ -83,7 +86,7 @@ class Parser{
     
     int findVariableIndex(const char *name, unsigned len = 0) const;
     
-    // <statement> ::= <set_statement> | <call_statement> | <smalltalk_call>
+    // <statement> ::= <set_statement> | <call_statement> | <smalltalk_call> | <if> | <loop>
     bool parseStatement(const Token *const start, const Token *&i, const Token *const end);
     // <bin_op> ::= [<not>] (<greater_than> | <less_than> | <equal> | <and> | <or> | <xor>)
     // <expression> ::= <bterm> [<bin_op> <bterm>]*
@@ -102,6 +105,17 @@ class Parser{
     // <call_statement> ::= 'call' <identifier> [':'] [<expression>]* '.'
     bool parseCall(const Token *const start, const Token *&i, const Token *const end);
     Variable *validateVariableDeclaration(const Token &i);
+
+    bool parseControl(
+        const Token *const start, const Token *&i, const Token *const end, bool loop);
+    // <if> ::= 'if' <expression> ':' <statement>* '.'
+    inline bool parseIf(const Token *const start, const Token *&i, const Token *const end){
+        return parseControl(start, i, end, false);
+    }
+    // <loop> ::= 'loop' <expression> ':' <statement>* '.'
+    inline bool parseLoop(const Token *const start, const Token *&i, const Token *const end){
+        return parseControl(start, i, end, true);
+    }
     
     bool doCall(const char *name, unsigned name_len,
         const Token *const start, const Token *&i, const Token *const end, int /*Operator*/ ender);
@@ -131,6 +145,7 @@ public:
         m_sp = 0;
         m_num_variables = 0;
         m_string_length = 0;
+        m_scope_stack_len = 0;
         m_error[0] = m_error[s_parser_error_len - 1] = '\0';
     }
     
