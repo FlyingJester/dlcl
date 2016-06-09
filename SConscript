@@ -17,7 +17,7 @@ else:
 
 conf.Finish()
 
-if has_test_lib and os.path.exists("unittest-cpp/UnitTest++"):
+if has_test_lib: # and os.path.exists("unittest-cpp/UnitTest++"):
     dlcl_tests = Program(["dlcl_test.cpp"], LIBS = [dlcl, "unittest++"],
         LIBPATH = [os.getcwd()], CCFLAGS = " -g -Os ",
         CPPPATH = [os.path.join(os.getcwd(), "unittest-cpp/UnitTest++")])
