@@ -54,6 +54,7 @@ void Token::toString(char *to) const{
         CASE_(Dot);
         CASE_(BeginArgs);
         CASE_(EndArgs);
+        CASE_(Const);
         case Oper:
         switch(m_value.oper){
             CASE_(Plus);
@@ -194,7 +195,7 @@ bool Lexer::lex(const char *str, unsigned len){
                 str++;
             }while(--len && is_digit(*str));
             const int n = u;
-            addToken(Token::Number, static_cast<float>(n));
+            addToken(line, Token::Number, static_cast<float>(n));
         }
         else if(is_ident(*str)){
             char id[80];
@@ -230,7 +231,7 @@ bool Lexer::lex(const char *str, unsigned len){
                     swallow_colon = another_ident = true;
                 }
                 else if(str_len == 2 && id[1] == 'f'){
-                    addTokenMod(Token::If);
+                    addTokenMod(line, Token::If);
                     continue;
                 }
             }
@@ -240,23 +241,27 @@ bool Lexer::lex(const char *str, unsigned len){
                 swallow_colon = true;
             }
             else if(str_len == 4 && *id == 't' && memcmp(id, "true", 4) == 0){
-                addTokenMod(Token::TrueLiteral);
+                addTokenMod(line, Token::TrueLiteral);
                 continue;
             }
             else if(str_len == 5 && *id == 'f' && memcmp(id, "false", 5) == 0){
-                addTokenMod(Token::FalseLiteral);
+                addTokenMod(line, Token::FalseLiteral);
                 continue;
             }
             else if(str_len == 4 && *id == 'l' && memcmp(id, "loop", 4) == 0){
-                addTokenMod(Token::Loop);
+                addTokenMod(line, Token::Loop);
                 continue;
             }
             else if(str_len == 4 && *id == 'n' && memcmp(id, "next", 4) == 0){
-                addTokenMod(Token::Next);
+                addTokenMod(line, Token::Next);
                 continue;
             }
             else if(str_len == 3 && *id == 'e' && memcmp(id, "end", 3) == 0){
-                addTokenMod(Token::End);
+                addTokenMod(line, Token::End);
+                continue;
+            }
+            else if(str_len == 5 && *id == 'c' && memcmp(id, "const", 5) == 0){
+                addTokenMod(line, Token::Const);
                 continue;
             }
             
@@ -272,7 +277,7 @@ bool Lexer::lex(const char *str, unsigned len){
                     return false;
                 }
                 else{
-                    addToken(which, str_data, str_len);
+                    addToken(line, which, str_data, str_len);
                 }
             }
             else{
@@ -283,7 +288,7 @@ bool Lexer::lex(const char *str, unsigned len){
                 else{
                     char *const str_data = m_string_data + m_string_len;
                     memcpy(str_data, id, str_len);
-                    addToken(Token::Ident, str_data, str_len);
+                    addToken(line, Token::Ident, str_data, str_len);
                 }
             }
             if(swallow_colon && len && *str == ':'){
@@ -306,7 +311,7 @@ bool Lexer::lex(const char *str, unsigned len){
             }
             str += str_len;
             m_string_len += str_len;
-            addToken(Token::String, str_data, str_len);
+            addToken(line, Token::String, str_data, str_len);
             
             if(len && *str == '"'){
                 str++;
@@ -316,7 +321,7 @@ bool Lexer::lex(const char *str, unsigned len){
         
 #define SINGLE_CHAR_TOKEN(ENUM_, CHAR_)\
         else if(*str == CHAR_){\
-            addTokenMod(Token:: ENUM_);\
+            addTokenMod(line, Token:: ENUM_);\
             str++;\
             len--;\
         }
@@ -332,7 +337,7 @@ bool Lexer::lex(const char *str, unsigned len){
         
 #define SINGLE_CHAR_TOKEN_OPER(ENUM_, CHAR_)\
         else if(*str == CHAR_){\
-            addToken(ENUM_);\
+            addToken(line, ENUM_);\
             str++;\
             len--;\
         }
@@ -366,7 +371,7 @@ bool Lexer::lex(const char *str, unsigned len){
         else{
             Operator oper;
             if(get_op(str, len, oper)){
-                addToken(oper);
+                addToken(line, oper);
             }
             else{
                 if(str - start > 2 && len > 2)

@@ -36,6 +36,7 @@ int main(int argc, char *argv[]){
 	
 	printf("Size of Lexer is %i, size of Parser is %i\n", sizeof(Lexer), sizeof(Parser));
 	printf("Maximum number of variables: %i\n", s_max_parser_arena_size / sizeof(struct Variable));
+    printf("Sizeof Token: %i\n", sizeof(Token));
 
     Lexer lex;
     lex.clear();
@@ -57,7 +58,7 @@ int main(int argc, char *argv[]){
         }
         
         parse.bindCallback("Print", Print, NULL);
-        const Value *const function = parse.findVariableConst("Print", 5);
+        const Variable *const function = parse.findVariableConst("Print", 5);
         parse.parse(lex);
         printf("Parser error: %s\n", parse.getError());
     }

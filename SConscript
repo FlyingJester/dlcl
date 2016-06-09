@@ -3,7 +3,7 @@ Import("environment")
 import os
 
 dlcl = environment.StaticLibrary("dlcl", ["dlcl_parser.cpp", "dlcl_lexer.cpp", "dlcl_std.cpp", "dlcl_utils.c"],
-    CCFLAGS = " -g -O2 -Wall -Wextra ")
+    CCFLAGS = " -g -Os -ffast-math -Wall -Wextra ")
 dlcl_test1 = environment.Program(["test1.cpp"], LIBS = [dlcl], CCFLAGS = " -g -O2 ")
 
 if os.name == "posix":
@@ -13,7 +13,7 @@ else:
 
 if has_test_lib and os.path.exists("unittest-cpp/UnitTest++"):
     dlcl_tests = Program(["dlcl_test.cpp"], LIBS = [dlcl, "unittest++"],
-        LIBPATH = [os.getcwd()], CCFLAGS = " -g -O2 ",
+        LIBPATH = [os.getcwd()], CCFLAGS = " -g -Os ",
         CPPPATH = [os.path.join(os.getcwd(), "unittest-cpp/UnitTest++")])
 else:
     print("WARNING: Skipping tests, you don't have UnitTest++ in the build directory")

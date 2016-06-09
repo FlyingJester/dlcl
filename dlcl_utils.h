@@ -6,10 +6,14 @@
 
 #ifdef __cplusplus
     #define DLCL_DEFAULT_ARG(X) = X
-    extern "C"
+    extern "C" {
 #else
     #define DLCL_DEFAULT_ARG(X)
 #endif
 void DLCL_Utils_NumberToString(char *to, int i,
     int len DLCL_DEFAULT_ARG(-1),
     bool null_term DLCL_DEFAULT_ARG(true));
+
+#ifdef __cplusplus
+}
+#endif

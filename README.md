@@ -1,6 +1,8 @@
 DLCL
 ====
 
+[![Build Status](https://semaphoreci.com/api/v1/flyingjester/dlcl/branches/master/badge.svg)](https://semaphoreci.com/flyingjester/dlcl)
+
 DLCL is an imperative, procedural language with functional features. This implementation is
 purely interpreted and intended to run on desktop machines as well as embedded platforms. It
 has no dependencies, does not use any IO libraries (except in the included example), and has

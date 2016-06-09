@@ -178,13 +178,13 @@ protected:
     LexerTest m_lex;
     Parser m_parse;
     
-    bool run(const char *src){
+    bool run(const char *src, bool print_err = true){
         if(!m_lex.run(src))
             return false;
         m_parse.parse(m_lex.lexer());
 
         const bool r = m_parse.getError()[0] == '\0';
-        if(!r){
+        if(!r && print_err){
             fputs("Parser Error: ", stdout);
             puts(m_parse.getError());
         }
@@ -219,12 +219,12 @@ TEST_FIXTURE(ParserTest, BindNativeTest){
     const char *const testname = "TestFunc";
     m_parse.bindCallback(testname, TestNoArgsCallback, this);
     
-    const Value *function = m_parse.findVariableConst(testname);
+    const Variable *const function = m_parse.findVariableConst(testname);
     
     REQUIRE CHECK(function != NULL);
-    REQUIRE CHECK_EQUAL(Value::NativeFunction, function->m_type);
-    CHECK_EQUAL(TestNoArgsCallback, function->m_value.native_function);
-    CHECK_EQUAL((void *)this, function->a.arg);
+    REQUIRE CHECK_EQUAL(Value::NativeFunction, function->m_value.m_type);
+    CHECK_EQUAL(TestNoArgsCallback, function->m_value.m_value.native_function);
+    CHECK_EQUAL((void *)this, function->m_value.a.arg);
 }
 
 TEST_FIXTURE(ParserTest, NoArgsNativeCallback){
@@ -392,6 +392,23 @@ TEST_FIXTURE(ParserTest, ConditionalFalseTest){
     m_parse.bindCallback(testname, TestArgCallback<1>, &result);
     CHECK(run("call TestFunc: 216.\n if false:\n call TestFunc: 23. \n."));
     CHECK(result.m_success);
+}
+
+TEST_FIXTURE(ParserTest, FailConstTest){
+
+    // Small sanity check to be sure that our test would work without const.
+    CHECK(run("int a 10 \n set a 11"));
+    
+    m_parse.clear();
+    
+    CHECK(!run("const int a 10 \n set a 11", false));
+
+}
+
+TEST_FIXTURE(ParserTest, FailRedeclarationTest){
+    
+    CHECK(!run("int a 216 \n int a 23", false));
+    
 }
 
 } // SUITE(Parser)

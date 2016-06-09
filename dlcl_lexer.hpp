@@ -51,6 +51,7 @@ struct Token {
         Dot,
         BeginArgs,
         EndArgs,
+        Const,
         Oper
     } m_type;
     
@@ -97,7 +98,8 @@ struct Token {
         float number;
         Operator oper;
     } m_value;
-    unsigned m_length;
+    unsigned short m_length;
+    unsigned short m_line_num;
 };
 
 // Memory constraints
@@ -113,25 +115,26 @@ class Lexer{
     unsigned m_string_len;
     char m_data[s_lexer_error_len];
     
-    inline void addTokenMod(Token::Type t, unsigned l = 0u){
+    inline void addTokenMod(unsigned short line_num, Token::Type t, unsigned l = 0u){
         m_tokens[m_num_tokens].m_type = t;
         m_tokens[m_num_tokens].m_length = l;
+        m_tokens[m_num_tokens].m_line_num = line_num;
         m_num_tokens++;
     }
     
-    inline void addToken(Token::Type t, char *s, unsigned l){
+    inline void addToken(unsigned short line_num, Token::Type t, char *s, unsigned l){
         m_tokens[m_num_tokens].m_value.ident = s;
-        addTokenMod(t, l);
+        addTokenMod(line_num, t, l);
     }
 
-    inline void addToken(Token::Type t, float f){
+    inline void addToken(unsigned short line_num, Token::Type t, float f){
         m_tokens[m_num_tokens].m_value.number = f;
-        addTokenMod(t);
+        addTokenMod(line_num, t);
     }
     
-    inline void addToken(Operator oper){
+    inline void addToken(unsigned short line_num, Operator oper){
         m_tokens[m_num_tokens].m_value.oper = oper;
-        addTokenMod(Token::Oper);
+        addTokenMod(line_num, Token::Oper);
     }
     
 public:

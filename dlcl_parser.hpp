@@ -39,6 +39,7 @@ struct Value {
         unsigned length;
         void *arg;
     } a;
+    
     static Type typeFromToken(const Token *t);
     const char *readableTypeName() const;
     
@@ -49,6 +50,7 @@ struct Value {
 
 struct Variable {
     char m_name[80];
+    bool m_const;
     Value m_value;
 };
 
@@ -125,17 +127,17 @@ public:
     // Binds a native function to a variable in script
     void bindCallback(const char *name, native_callback, void *arg);
     
-    inline Value *findVariable(const char *name, unsigned len = 0) {
+    inline Variable *findVariable(const char *name, unsigned len = 0) {
         const int r = findVariableIndex(name, len);
         return (r >= 0 && static_cast<unsigned>(r) < s_max_parser_variables) ?
-            &(m_variables[r].m_value) : NULL;
+            (m_variables + r) : NULL;
     }
-    inline const Value *findVariableConst(const char *name, unsigned len = 0) const {
+    inline const Variable *findVariableConst(const char *name, unsigned len = 0) const {
         const int r = findVariableIndex(name, len);
         return (r >= 0 && static_cast<unsigned>(r) < s_max_parser_variables) ? 
-            &(m_variables[r].m_value) : NULL;
+            (m_variables + r) : NULL;
     }
-    inline const Value *findVariable(const char *name, unsigned len = 0) const {
+    inline const Variable *findVariable(const char *name, unsigned len = 0) const {
         return findVariableConst(name, len);
     }
     

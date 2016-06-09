@@ -74,7 +74,7 @@ int Parser::findVariableIndex(const char *name, unsigned len) const {
 //=============================================================================
 // Helpers
 //=============================================================================
-static bool handleVariable(char *errdest, Value *that, const Token *i){
+static bool handleVariable(char *errdest, Variable *that, const Token *i){
     if(!that){
         if(i->m_length >= 80)
             strcpy(errdest, "Overlength variable name.");
@@ -158,13 +158,15 @@ Variable *Parser::validateVariableDeclaration(const Token &i){
 bool Parser::doCall(const char *func_name, unsigned func_name_len,
     const Token *const start, const Token *&i, const Token *const end, int i_ender){
     const Token::Type ender = static_cast<Token::Type>(i_ender);
-    const Value *const function = findVariableConst(func_name, func_name_len);
-    if(!function){
+    const Variable *const function_variable = findVariableConst(func_name, func_name_len);
+    if(!function_variable){
         strcpy(m_error, "Call to undeclared function: ");
         strncat(m_error, func_name, func_name_len);
         return false;
     }
-    if(function->m_type == Value::Function){
+    const Value &function = function_variable->m_value;
+    
+    if(function.m_type == Value::Function){
         const unsigned backtrack_variable_size = m_num_variables,
             backtrack_string_length = m_string_length;
         
@@ -184,13 +186,13 @@ bool Parser::doCall(const char *func_name, unsigned func_name_len,
             }
         }
         
-        if(arg_num != function->a.num_args){
+        if(arg_num != function.a.num_args){
             strcpy(m_error, "Incorrect number of arguments for function: ");
             strncat(m_error, i->m_value.ident, i->m_length);
             return false;
         }
         
-        const Token *func_i = start + function->m_value.function;
+        const Token *func_i = start + function.m_value.function;
         // Set up the arguments
         const unsigned first_num_variables = m_num_variables;
         // TODO: Cleanup
@@ -244,7 +246,7 @@ bool Parser::doCall(const char *func_name, unsigned func_name_len,
         //   after the function call, rollback the string data length.
         
     }
-    else if(function->m_type == Value::NativeFunction){
+    else if(function.m_type == Value::NativeFunction){
         unsigned arg_num = 0;
         if(i != end)
             i++;
@@ -266,8 +268,8 @@ bool Parser::doCall(const char *func_name, unsigned func_name_len,
         if(i != end && i->m_type == ender)
             i++;
 #undef DLCL_MAX_ARGS
-        if(!function->m_value.native_function(
-            m_error, m_stack[m_sp++], function->a.arg, m_arg_stack, arg_num)){
+        if(!function.m_value.native_function(
+            m_error, m_stack[m_sp++], function.a.arg, m_arg_stack, arg_num)){
             strcpy(m_error, "Internal error in native function call");
             return false;
         }
@@ -280,8 +282,8 @@ bool Parser::doCall(const char *func_name, unsigned func_name_len,
         strcat(m_error, " (type was ");
         char n[] = {'0', '0', ')', 0 };
         
-        n[0] += function->m_type / 10;
-        n[1] += function->m_type % 10;
+        n[0] += function.m_type / 10;
+        n[1] += function.m_type % 10;
         strcat(m_error, n);
         return false;
     }
@@ -330,6 +332,8 @@ bool Parser::parseFactor(const Token *const start, const Token *&i, const Token 
             if(!t) t = "Colon (:)";
         case Token::Dot:
             if(!t) t = "Dot (.)";
+        case Token::Const:
+            if(!t) t = "const";
         case Token::EndArgs:
             if(!t) t = "EndArgs (])";
             strcpy(m_error, "Unexpected ");
@@ -357,7 +361,7 @@ bool Parser::parseFactor(const Token *const start, const Token *&i, const Token 
             return false;
         case Token::GetIdent:
         {
-            const Value *const value = findVariableConst(i->m_value.ident, i->m_length);
+            const Variable *const value = findVariableConst(i->m_value.ident, i->m_length);
             if(!value){
                 strcpy(m_error, "Get of undeclared variable ");
                 strncat(m_error, i->m_value.ident, i->m_length);
@@ -368,7 +372,7 @@ bool Parser::parseFactor(const Token *const start, const Token *&i, const Token 
                 strcpy(m_error, "Stack Overflow");
                 return false;
             }
-            m_stack[m_sp++] = *value;
+            m_stack[m_sp++] = value->m_value;
             
             i++;
             
@@ -705,7 +709,20 @@ conditional_start:
 
 //=============================================================================
 bool Parser::parseStatement(const Token *const start, const Token *&i, const Token *const end){
-    if(i->isDeclaration()){
+    if(i->isDeclaration() || i->m_type == Token::Const){
+        
+        bool is_const = i->m_type == Token::Const;
+        
+        if(is_const){
+            if(++i == end){
+                strcpy(m_error, "Unexpected end of input after const");
+                return false;
+            }
+            if(!i->isDeclaration()){
+                strcpy(m_error, "Expected declaration after const");
+                return false;
+            }
+        }
         
         Variable *const variable = validateVariableDeclaration(*i);
         if(!variable)
@@ -714,7 +731,10 @@ bool Parser::parseStatement(const Token *const start, const Token *&i, const Tok
         // Copy name
         memcpy(variable->m_name, i->m_value.ident, i->m_length);
         variable->m_name[i->m_length] = '\0';
-
+        
+        // Set const flag
+        variable->m_const = is_const;
+        
         Value &that = variable->m_value;
         
         if(!parseExpression(start, ++i, end))
@@ -761,20 +781,27 @@ bool Parser::parseStatement(const Token *const start, const Token *&i, const Tok
         }
     }
     else if(i->m_type == Token::SetIdent){
-        Value *const that = findVariable(i->m_value.ident, i->m_length);
+        Variable *const that = findVariable(i->m_value.ident, i->m_length);
+        
         if(!handleVariable(m_error, that, i))
             return false;
+        if(that->m_const){
+            strcpy(m_error, "Invalid set of const variable ");
+            strncat(m_error, i->m_value.ident, i->m_length);
+            return false;
+        }
+        
         if(!parseExpression(start, ++i, end))
             return false;
         
         Value &value = m_stack[--m_sp];
         
         // Typecheck
-        if(!handleTypeComparison(m_error, value, *that))
+        if(!handleTypeComparison(m_error, value, that->m_value))
             return false;
         
-        that->m_value = value.m_value;
-        that->a = value.a;
+        that->m_value.m_value = value.m_value;
+        that->m_value.a = value.a;
         return true;
     }
     else if(i->m_type == Token::Loop){
