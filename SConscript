@@ -6,10 +6,16 @@ dlcl = environment.StaticLibrary("dlcl", ["dlcl_parser.cpp", "dlcl_lexer.cpp", "
     CCFLAGS = " -g -Os -ffast-math -Wall -Wextra ")
 dlcl_test1 = environment.Program(["test1.cpp"], LIBS = [dlcl], CCFLAGS = " -g -O2 ")
 
-if os.name == "posix":
+conf = Configure(environment)
+
+if conf.CheckLib("UnitTest++"):
+    has_test_lib = True
+elif os.name == "posix":
     has_test_lib = os.path.isfile("libUnitTest++.a") or os.path.isfile("libUnitTest++.so")
 else:
     has_test_lib = os.path.isfile("UnitTest++.lib")
+
+conf.Finish()
 
 if has_test_lib and os.path.exists("unittest-cpp/UnitTest++"):
     dlcl_tests = Program(["dlcl_test.cpp"], LIBS = [dlcl, "unittest++"],
