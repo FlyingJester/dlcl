@@ -9,8 +9,8 @@
 #include "UnitTestPP.h"
 #include "TestReporterStdout.h"
 #else
-#include <UnitTest++/UnitTest++.h>
-#include <UnitTest++/TestReporterStdout.h>
+#include <unittest++/UnitTest++.h>
+#include <unittest++/TestReporterStdout.h>
 #endif
 #include <cstring>
 #include <cstdio>
