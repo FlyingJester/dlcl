@@ -14,8 +14,6 @@
 #include <unittest++/TestReporterStdout.h>
 #endif
 
-#include "RequireMacros.h"
-
 #include <cstring>
 #include <cstdio>
 #include <string>
@@ -60,97 +58,100 @@ TEST_FIXTURE(LexerTest, EmptyTest){
     };
 
     for(unsigned i = 0; i < num_tests; i++){
-        REQUIRE CHECK(run(tests[i]));
+        CHECK(run(tests[i]));
         CHECK(empty());
     }
 }
 
 TEST_FIXTURE(LexerTest, CommentTest){
-    REQUIRE CHECK(run(" % This is a comment! "));
+    CHECK(run(" % This is a comment! "));
     CHECK(empty());
     
     m_lex.clear();
     
-    REQUIRE CHECK(run(" % this is a comment! \n string other \"but this is not!\""));
+    CHECK(run(" % this is a comment! \n string other \"but this is not!\""));
     CHECK(!empty());
     CHECK(m_lex.cbegin()->m_type == Token::StringIdent);
 }
 
 TEST_FIXTURE(LexerTest, CallTest){
-    REQUIRE CHECK(run("call somefunc."));
+    CHECK(run("call somefunc."));
     CHECK_EQUAL(2, m_lex.size());
-    REQUIRE CHECK(m_lex.size() >= 2);
-    CHECK_EQUAL(Token::CallIdent, m_lex.cbegin()[0].m_type);
-    CHECK_EQUAL("somefunc", std::string(m_lex.cbegin()[0].m_value.string, m_lex.cbegin()[0].m_length));
-    CHECK_EQUAL(Token::Dot, m_lex.cbegin()[1].m_type);
+    if(m_lex.size() >= 2){
+        CHECK_EQUAL(Token::CallIdent, m_lex.cbegin()[0].m_type);
+        CHECK_EQUAL("somefunc", std::string(m_lex.cbegin()[0].m_value.string, m_lex.cbegin()[0].m_length));
+        CHECK_EQUAL(Token::Dot, m_lex.cbegin()[1].m_type);
+    }
 }
 
 TEST_FIXTURE(LexerTest, SetTest){
-    REQUIRE CHECK(run("set somevar 10"));
+    CHECK(run("set somevar 10"));
     CHECK_EQUAL(2, m_lex.size());
-    REQUIRE CHECK(m_lex.size() >= 2);
-    CHECK_EQUAL(Token::SetIdent, m_lex.cbegin()[0].m_type);
-    CHECK_EQUAL("somevar", std::string(m_lex.cbegin()[0].m_value.string, m_lex.cbegin()[0].m_length));
-    CHECK_EQUAL(Token::Number, m_lex.cbegin()[1].m_type);
-    CHECK_EQUAL(10, m_lex.cbegin()[1].m_value.number);
+    if(m_lex.size() >= 2){
+        CHECK_EQUAL(Token::SetIdent, m_lex.cbegin()[0].m_type);
+        CHECK_EQUAL("somevar", std::string(m_lex.cbegin()[0].m_value.string, m_lex.cbegin()[0].m_length));
+        CHECK_EQUAL(Token::Number, m_lex.cbegin()[1].m_type);
+        CHECK_EQUAL(10, m_lex.cbegin()[1].m_value.number);
+    }
 }
 
 TEST_FIXTURE(LexerTest, GetTest){
-    REQUIRE CHECK(run("get somevar"));
+    CHECK(run("get somevar"));
     CHECK_EQUAL(1, m_lex.size());
-    REQUIRE CHECK(!m_lex.empty());
-    CHECK_EQUAL(Token::GetIdent, m_lex.cbegin()[0].m_type);
-    CHECK_EQUAL("somevar", std::string(m_lex.cbegin()[0].m_value.string, m_lex.cbegin()[0].m_length));
+    if(!m_lex.empty()){
+        CHECK_EQUAL(Token::GetIdent, m_lex.cbegin()[0].m_type);
+        CHECK_EQUAL("somevar", std::string(m_lex.cbegin()[0].m_value.string, m_lex.cbegin()[0].m_length));
+    }
 }
 
 TEST_FIXTURE(LexerTest, MulOpTest){
-    REQUIRE CHECK(run("int i 10 * 2 / 299 * 1"));
+    CHECK(run("int i 10 * 2 / 299 * 1"));
     CHECK_EQUAL(8, m_lex.size());
-    REQUIRE CHECK(m_lex.size() >= 8);
-    
-    const Token *t = m_lex.cbegin();
-    CHECK_EQUAL(Token::IntIdent, t->m_type);
-    CHECK_EQUAL("i", std::string(t->m_value.string, t->m_length));
-    t++;
-    CHECK_EQUAL(Token::Number, t->m_type);
-    CHECK_EQUAL(10, t->m_value.number);
-    t++;
-    CHECK_EQUAL(Token::Oper, t->m_type);
-    CHECK_EQUAL(Multiply, t->m_value.oper);
-    t++;
-    CHECK_EQUAL(Token::Number, t->m_type);
-    CHECK_EQUAL(2, t->m_value.number);
-    t++;
-    CHECK_EQUAL(Token::Oper, t->m_type);
-    CHECK_EQUAL(Divide, t->m_value.oper);
-    t++;
-    CHECK_EQUAL(Token::Number, t->m_type);
-    CHECK_EQUAL(299, t->m_value.number);
-    t++;
-    CHECK_EQUAL(Token::Oper, t->m_type);
-    CHECK_EQUAL(Multiply, t->m_value.oper);
-    t++;
-    CHECK_EQUAL(Token::Number, t->m_type);
-    CHECK_EQUAL(1, t->m_value.number);
+    if(m_lex.size() >= 8){
+        const Token *t = m_lex.cbegin();
+        CHECK_EQUAL(Token::IntIdent, t->m_type);
+        CHECK_EQUAL("i", std::string(t->m_value.string, t->m_length));
+        t++;
+        CHECK_EQUAL(Token::Number, t->m_type);
+        CHECK_EQUAL(10, t->m_value.number);
+        t++;
+        CHECK_EQUAL(Token::Oper, t->m_type);
+        CHECK_EQUAL(Multiply, t->m_value.oper);
+        t++;
+        CHECK_EQUAL(Token::Number, t->m_type);
+        CHECK_EQUAL(2, t->m_value.number);
+        t++;
+        CHECK_EQUAL(Token::Oper, t->m_type);
+        CHECK_EQUAL(Divide, t->m_value.oper);
+        t++;
+        CHECK_EQUAL(Token::Number, t->m_type);
+        CHECK_EQUAL(299, t->m_value.number);
+        t++;
+        CHECK_EQUAL(Token::Oper, t->m_type);
+        CHECK_EQUAL(Multiply, t->m_value.oper);
+        t++;
+        CHECK_EQUAL(Token::Number, t->m_type);
+        CHECK_EQUAL(1, t->m_value.number);
+    }
 }
 
 TEST_FIXTURE(LexerTest, AddOpTest){
-    REQUIRE CHECK(run("string \nstr \n\"abc\" \n+\n \"xyz\""));
+    CHECK(run("string \nstr \n\"abc\" \n+\n \"xyz\""));
     CHECK_EQUAL(4, m_lex.size());
-    REQUIRE CHECK(m_lex.size() >= 4);
-    
-    const Token *t = m_lex.cbegin();
-    CHECK_EQUAL(Token::StringIdent, t->m_type);
-    CHECK_EQUAL("str", std::string(t->m_value.string, t->m_length));
-    t++;
-    CHECK_EQUAL(Token::String, t->m_type);
-    CHECK_EQUAL("abc", std::string(t->m_value.string, t->m_length));
-    t++;
-    CHECK_EQUAL(Token::Oper, t->m_type);
-    CHECK_EQUAL(Plus, t->m_value.oper);
-    t++;
-    CHECK_EQUAL(Token::String, t->m_type);
-    CHECK_EQUAL("xyz", std::string(t->m_value.string, t->m_length));
+    if(m_lex.size() >= 4){
+        const Token *t = m_lex.cbegin();
+        CHECK_EQUAL(Token::StringIdent, t->m_type);
+        CHECK_EQUAL("str", std::string(t->m_value.string, t->m_length));
+        t++;
+        CHECK_EQUAL(Token::String, t->m_type);
+        CHECK_EQUAL("abc", std::string(t->m_value.string, t->m_length));
+        t++;
+        CHECK_EQUAL(Token::Oper, t->m_type);
+        CHECK_EQUAL(Plus, t->m_value.oper);
+        t++;
+        CHECK_EQUAL(Token::String, t->m_type);
+        CHECK_EQUAL("xyz", std::string(t->m_value.string, t->m_length));
+    }
 }
 
 TEST_FIXTURE(LexerTest, ConditionalTest){
@@ -158,26 +159,26 @@ TEST_FIXTURE(LexerTest, ConditionalTest){
     CHECK(run("if true:\n call xyz: 216.\n."));
     
     CHECK_EQUAL(8, m_lex.size());
-    REQUIRE CHECK(m_lex.size() >= 8);
-    
-    const Token *t = m_lex.cbegin();
-    CHECK_EQUAL(Token::If, t->m_type);
-    t++;
-    CHECK_EQUAL(Token::TrueLiteral, t->m_type);
-    t++;
-    CHECK_EQUAL(Token::Colon, t->m_type);
-    t++;
-    CHECK_EQUAL(Token::CallIdent, t->m_type);
-    CHECK_EQUAL("xyz", std::string(t->m_value.string, t->m_length));
-    t++;
-    CHECK_EQUAL(Token::Colon, t->m_type);
-    t++;
-    CHECK_EQUAL(Token::Number, t->m_type);
-    CHECK_EQUAL(216.0f, t->m_value.number);
-    t++;
-    CHECK_EQUAL(Token::Dot, t->m_type);
-    t++;
-    CHECK_EQUAL(Token::Dot, t->m_type);
+    if(m_lex.size() >= 8){
+        const Token *t = m_lex.cbegin();
+        CHECK_EQUAL(Token::If, t->m_type);
+        t++;
+        CHECK_EQUAL(Token::TrueLiteral, t->m_type);
+        t++;
+        CHECK_EQUAL(Token::Colon, t->m_type);
+        t++;
+        CHECK_EQUAL(Token::CallIdent, t->m_type);
+        CHECK_EQUAL("xyz", std::string(t->m_value.string, t->m_length));
+        t++;
+        CHECK_EQUAL(Token::Colon, t->m_type);
+        t++;
+        CHECK_EQUAL(Token::Number, t->m_type);
+        CHECK_EQUAL(216.0f, t->m_value.number);
+        t++;
+        CHECK_EQUAL(Token::Dot, t->m_type);
+        t++;
+        CHECK_EQUAL(Token::Dot, t->m_type);
+    }
 }
 
 } // SUITE(Lexer)
@@ -230,8 +231,8 @@ TEST_FIXTURE(ParserTest, BindNativeTest){
     
     const Variable *const function = m_parse.findVariableConst(testname);
     
-    REQUIRE CHECK(function != NULL);
-    REQUIRE CHECK_EQUAL(Value::NativeFunction, function->m_value.m_type);
+    CHECK(function != NULL);
+    CHECK_EQUAL(Value::NativeFunction, function->m_value.m_type);
     CHECK_EQUAL(TestNoArgsCallback, function->m_value.m_value.native_function);
     CHECK_EQUAL((void *)this, function->m_value.a.arg);
 }
@@ -270,26 +271,28 @@ TEST_FIXTURE(ParserTest, ThreeArgsNativeCallback){
         *const str = "It's a TRAP!";
     char string_buffer[80];
     const unsigned len = strlen(str);
-    REQUIRE CHECK(len < sizeof(string_buffer));
+    CHECK(len < sizeof(string_buffer));
+    if(len < sizeof(string_buffer)){
     
-    memcpy(string_buffer, str, len);
-    
-    Result<3> result;
-    result.m_success = false;
+        memcpy(string_buffer, str, len);
+        
+        Result<3> result;
+        result.m_success = false;
 
-    result.m_values[0].m_type = Value::Integer;
-    result.m_values[0].m_value.integer = 1;
-    
-    result.m_values[1].m_type = Value::String;
-    result.m_values[1].m_value.string = string_buffer;
-    result.m_values[1].a.length =  len;
-    
-    result.m_values[2].m_type = Value::Boolean;
-    result.m_values[2].m_value.boolean = true;
-    
-    m_parse.bindCallback(testname, TestArgCallback<3>, &result);
-    CHECK(run("call TestFunc: 1 \"It's a TRAP!\" true."));
-    CHECK(result.m_success);
+        result.m_values[0].m_type = Value::Integer;
+        result.m_values[0].m_value.integer = 1;
+        
+        result.m_values[1].m_type = Value::String;
+        result.m_values[1].m_value.string = string_buffer;
+        result.m_values[1].a.length =  len;
+        
+        result.m_values[2].m_type = Value::Boolean;
+        result.m_values[2].m_value.boolean = true;
+        
+        m_parse.bindCallback(testname, TestArgCallback<3>, &result);
+        CHECK(run("call TestFunc: 1 \"It's a TRAP!\" true."));
+        CHECK(result.m_success);
+    }
 }
 
 TEST_FIXTURE(ParserTest, SmallTalkCallTest){
@@ -313,7 +316,7 @@ TEST_FIXTURE(ParserTest, StringAddTest){
         *const str = "What a twist?";
     char string_buffer[80];
     const unsigned len = strlen(str);
-    REQUIRE CHECK(len < sizeof(string_buffer));
+    CHECK(len < sizeof(string_buffer));
 
     memcpy(string_buffer, str, len);
 
@@ -334,20 +337,21 @@ TEST_FIXTURE(ParserTest, FailStringAddTest){
         *const str = "What a twist?";
     char string_buffer[80];
     const unsigned len = strlen(str);
-    REQUIRE CHECK(len < sizeof(string_buffer));
+    CHECK(len < sizeof(string_buffer));
+    if(len < sizeof(string_buffer)){
+        memcpy(string_buffer, str, len);
 
-    memcpy(string_buffer, str, len);
+        Result<1> result;
+        result.m_success = true;
 
-    Result<1> result;
-    result.m_success = true;
-
-    result.m_values[0].m_type = Value::String;
-    result.m_values[0].m_value.string = string_buffer;
-    result.m_values[0].a.length = len;
-    
-    m_parse.bindCallback(testname, TestArgCallback<1>, &result);
-    CHECK(run("call TestFunc: \"What a \" + \"joke\" + \"?\"."));
-    CHECK(!result.m_success);
+        result.m_values[0].m_type = Value::String;
+        result.m_values[0].m_value.string = string_buffer;
+        result.m_values[0].a.length = len;
+        
+        m_parse.bindCallback(testname, TestArgCallback<1>, &result);
+        CHECK(run("call TestFunc: \"What a \" + \"joke\" + \"?\"."));
+        CHECK(!result.m_success);
+    }
 }
 
 TEST_FIXTURE(ParserTest, NumberArithmeticTest){
