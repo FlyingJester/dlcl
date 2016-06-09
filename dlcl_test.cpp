@@ -5,8 +5,13 @@
 #include "dlcl_lexer.hpp"
 #include "dlcl_parser.hpp"
 #include "dlcl_std.hpp"
+#ifdef DLCL_UNITTEST_LOCAL
 #include "UnitTestPP.h"
 #include "TestReporterStdout.h"
+#else
+#include <UnitTest++/UnitTest++.h>
+#include <UnitTest++/TestReporterStdout.h>
+#endif
 #include <cstring>
 #include <cstdio>
 #include <string>
