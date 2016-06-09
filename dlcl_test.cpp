@@ -7,9 +7,11 @@
 #include "dlcl_std.hpp"
 #ifdef DLCL_UNITTEST_LOCAL
 #include "UnitTestPP.h"
+#include "RequireMacros.h"
 #include "TestReporterStdout.h"
 #else
 #include <unittest++/UnitTest++.h>
+#include <unittest++/RequireMacros.h>
 #include <unittest++/TestReporterStdout.h>
 #endif
 #include <cstring>
