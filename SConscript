@@ -2,9 +2,8 @@ Import("environment")
 
 import os
 
-dlcl = environment.StaticLibrary("dlcl", ["dlcl_parser.cpp", "dlcl_lexer.cpp", "dlcl_std.cpp", "dlcl_utils.c"],
-    CCFLAGS = " -g -Os -ffast-math -Wall -Wextra ")
-dlcl_test1 = environment.Program(["test1.cpp"], LIBS = [dlcl], CCFLAGS = " -g -O2 ")
+dlcl = environment.StaticLibrary("dlcl", ["dlcl_parser.cpp", "dlcl_lexer.cpp", "dlcl_std.cpp", "dlcl_utils.c"])
+dlcl_test1 = environment.Program(["test1.cpp"], LIBS = [dlcl])
 
 conf = Configure(environment)
 
