@@ -42,7 +42,8 @@ bool Value::equal(const Value &other) const{
     switch(m_type){
         case Value::String:
             return a.length == other.a.length &&
-                memcmp(other.m_value.string, m_value.string, a.length) == 0;
+                ( other.m_value.string == m_value.string ||
+                  memcmp(other.m_value.string, m_value.string, a.length) == 0);
         case Value::Boolean:
             return m_value.boolean == other.m_value.boolean;
         case Value::Integer:
