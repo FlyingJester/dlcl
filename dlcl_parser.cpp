@@ -41,9 +41,19 @@ bool Value::equal(const Value &other) const{
 
     switch(m_type){
         case Value::String:
-            return a.length == other.a.length &&
-                ( other.m_value.string == m_value.string ||
-                  memcmp(other.m_value.string, m_value.string, a.length) == 0);
+            if(a.length != other.a.length)
+                return false;
+            if(a.length > DLCL_SHORTSTR_SIZE){
+                return other.m_value.string == m_value.string ||
+                    memcmp(other.m_value.string, m_value.string, a.length) == 0;
+            }
+            else{
+                for(unsigned s_index = 0; s_index < a.length; s_index++){
+                    if(m_value.short_string[s_index] != other.m_value.short_string[s_index])
+                        return false;
+                }
+                return true;
+            }
         case Value::Boolean:
             return m_value.boolean == other.m_value.boolean;
         case Value::Integer:
@@ -56,6 +66,21 @@ bool Value::equal(const Value &other) const{
         default:
             return false; // Invalid or uncomparable type
     }
+}
+
+//=============================================================================
+bool Value::getString(char *to) const {
+    if(m_type != Value::String)
+        return false;
+    if(a.length > DLCL_SHORTSTR_SIZE){
+        memcpy(to, m_value.string, a.length);
+    }
+    else{
+        unsigned i;
+        for(i = 0; i < a.length; i++)
+            to[i] = m_value.short_string[i];
+    }
+    return true;
 }
 
 //=============================================================================
@@ -148,6 +173,7 @@ Variable *Parser::validateVariableDeclaration(const Token &i){
     
     // Grab the type before we move off of the current token
     strncpy(m_variables[m_num_variables].m_name, i.m_value.string, i.m_length);
+    
     m_variables[m_num_variables].m_value.m_type = Value::typeFromToken(&i);
     
     m_num_variables++;
@@ -303,7 +329,12 @@ bool Parser::parseFactor(const Token *const start, const Token *&i, const Token 
     switch(i->m_type){
         case Token::String:
             value.m_type = Value::String;
-            value.m_value.string = i->m_value.string;
+            if(i->m_length > DLCL_SHORTSTR_SIZE)
+                value.m_value.string = i->m_value.string;
+            else{
+                for(unsigned s_index = 0; s_index < i->m_length; s_index++)
+                    value.m_value.short_string[s_index] = i->m_value.string[s_index];
+            }
             value.a.length = i->m_length;
             i++;
             return true;
@@ -498,23 +529,30 @@ bool Parser::parseBTerm(const Token *const start, const Token *&i, const Token *
                     case Value::String:
                     {
                         const unsigned new_length = lvalue.a.length + rvalue.a.length;
-                        if(m_string_length + new_length >= s_max_parser_arena_size){
-                            strcpy(m_error, "Out of string memory");
-                            return false;
-                        }
                         const unsigned start = m_string_length;
                         
-                        // TODO: In the case that rvalue is on the end of the string arena, we could
-                        //   just reuse its location and memove it beyond where lvalue will be inserted.
-                        //   This would save notably on string memory.
-                        
-                        memcpy(m_string_data + m_string_length, lvalue.m_value.string, lvalue.a.length);
-                        m_string_length += lvalue.a.length;
-                        memcpy(m_string_data + m_string_length, rvalue.m_value.string, rvalue.a.length);
-                        m_string_length += rvalue.a.length;
+                        if(new_length > DLCL_SHORTSTR_SIZE){
+                            if(m_string_length + new_length >= s_max_parser_arena_size){
+                                strcpy(m_error, "Out of string memory");
+                                return false;
+                            }
+                            // TODO: In the case that rvalue is on the end of the string arena, we could
+                            //   just reuse its location and memove it beyond where lvalue will be inserted.
+                            //   This would save notably on string memory.
+                            
+                            lvalue.getString(m_string_data + m_string_length);
+                            m_string_length += lvalue.a.length;
+                            rvalue.getString(m_string_data + m_string_length);
+                            m_string_length += rvalue.a.length;
+                            
+                            dest.m_value.string = m_string_data + start;
+                        }
+                        else{
+                            lvalue.getString(dest.m_value.short_string);
+                            rvalue.getString(dest.m_value.short_string + lvalue.a.length);
+                        }
                         
                         dest.m_type = Value::String;
-                        dest.m_value.string = m_string_data + start;
                         dest.a.length = new_length;
                         break;
                     }

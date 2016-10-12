@@ -15,6 +15,8 @@ struct Value;
 
 typedef bool (*native_callback)(char *err, Value &return_val, void *arg, Value *args, unsigned num_args);
 
+#define DLCL_SHORTSTR_SIZE sizeof(char*)
+
 // Value structure
 struct Value {
     enum Type {
@@ -28,6 +30,7 @@ struct Value {
     
     union {
         char *string;
+        char short_string[DLCL_SHORTSTR_SIZE]; // Used when a string is <= 4 in length, to avoid a string allocation.
         int integer;
         bool boolean;
         unsigned function;
@@ -46,6 +49,10 @@ struct Value {
     // Determines equality. This is different than a bytewise equality in that strings
     // will be compared
     bool equal(const Value &other) const;
+    
+    // Returns false if the value is not a string.
+    // to must be at least a.length + 1 in size. Result will be NULL-terminated.
+    bool getString(char *to) const;
 };
 
 struct Variable {
