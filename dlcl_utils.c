@@ -21,10 +21,11 @@ void DLCL_Utils_NumberToString(char *to, int n, int len, bool null_term){
         n /= 10;
     }
     
-    char *const from = buffer + sizeof(buffer) - i;
-    
-    for(x = 0; x < i && x < len; x++){
-        to[x] = from[x];
+    {
+        char *const from = buffer + sizeof(buffer) - i;    
+        for(x = 0; x < i && x < len; x++){
+            to[x] = from[x];
+        }
     }
     if(i < len && null_term)
         to[i] = '\0';
