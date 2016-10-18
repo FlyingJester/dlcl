@@ -12,8 +12,8 @@ using namespace DarkLight::CL;
 
 bool Print(char *err, Value &return_val, void *arg, Value *args, unsigned num_args){
     fputs("dlcl> ", stdout);
+    (void)err;
     for(unsigned i = 0; i < num_args; i++){
-        
         if(args[i].m_type == Value::String)
             fwrite(args[i].m_value.string, args[i].a.length, 1, stdout);
         else if(args[i].m_type == Value::Integer)
@@ -34,9 +34,9 @@ bool Print(char *err, Value &return_val, void *arg, Value *args, unsigned num_ar
 int main(int argc, char *argv[]){
 	if(argc || argv){}
 	
-	printf("Size of Lexer is %i, size of Parser is %i\n", sizeof(Lexer), sizeof(Parser));
-	printf("Maximum number of variables: %i\n", s_max_parser_arena_size / sizeof(struct Variable));
-    printf("Sizeof Token: %i\n", sizeof(Token));
+	printf("Size of Lexer is %i, size of Parser is %i\n", (int)sizeof(Lexer), sizeof(Parser));
+	printf("Maximum number of variables: %i\n", (int)(s_max_parser_arena_size / sizeof(struct Variable)));
+    printf("Sizeof Token: %i\n", (int)sizeof(Token));
 
     Lexer lex;
     lex.clear();
@@ -53,15 +53,16 @@ int main(int argc, char *argv[]){
         for(const struct Token *i = lex.cbegin(); i!= lex.cend(); i++){
             i->toString(buffer);
             buffer[79] = 0;
-            printf("%i\t", i - lex.cbegin());
+            printf("%i\t", (int)(i - lex.cbegin()));
             puts(buffer);
         }
         
         parse.bindCallback("Print", Print, NULL);
         const Variable *const function = parse.findVariableConst("Print", 5);
+        (void)function;
         parse.parse(lex);
         printf("Parser error: %s\n", parse.getError());
     }
     
-	return 0;
+    return 0;
 }
