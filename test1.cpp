@@ -13,6 +13,7 @@ using namespace DarkLight::CL;
 bool Print(char *err, Value &return_val, void *arg, Value *args, unsigned num_args){
     fputs("dlcl> ", stdout);
     (void)err;
+    (void)arg;
     for(unsigned i = 0; i < num_args; i++){
         if(args[i].m_type == Value::String)
             fwrite(args[i].m_value.string, args[i].a.length, 1, stdout);
@@ -34,7 +35,7 @@ bool Print(char *err, Value &return_val, void *arg, Value *args, unsigned num_ar
 int main(int argc, char *argv[]){
 	if(argc || argv){}
 	
-	printf("Size of Lexer is %i, size of Parser is %i\n", (int)sizeof(Lexer), sizeof(Parser));
+	printf("Size of Lexer is %i, size of Parser is %i\n", (int)sizeof(Lexer), (int)sizeof(Parser));
 	printf("Maximum number of variables: %i\n", (int)(s_max_parser_arena_size / sizeof(struct Variable)));
     printf("Sizeof Token: %i\n", (int)sizeof(Token));
 
